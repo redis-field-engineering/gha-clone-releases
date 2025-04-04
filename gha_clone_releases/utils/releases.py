@@ -42,9 +42,9 @@ def get_missing_releases(source_releases, dest_releases, min_version) -> list[Gi
 
     wrapped_sources = set()
     for release in source_releases:
-        if exceeds_min_version(release.title, min_version):
+        if release.tag_name == "early-access" or exceeds_min_version(release.title, min_version):
             actions_toolkit.debug(
-                f"Source release: {release.title} is greater than {min_version}, will copy to destination"
+                f"Source release: {release.title} is early-access or greater than {min_version}, will copy to destination"
             )
             wrapped_sources.add(ReleaseWrapper(release))
         else:
