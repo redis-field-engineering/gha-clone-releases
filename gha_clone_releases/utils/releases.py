@@ -40,9 +40,16 @@ def get_missing_releases(source_releases, dest_releases, min_version) -> list[Gi
     actions_toolkit.debug(f"Source releases: {source_releases}")
     actions_toolkit.debug(f"Dest releases: {dest_releases}")
 
+    early_access_releases = []
     wrapped_sources = set()
     for release in source_releases:
-        if release.tag_name == "early-access" or exceeds_min_version(release.title, min_version):
+        if release.tag_name == "early-access":
+            actions_toolkit.debug(
+                f"Source release: {release.title} has early-access tag, copy to destination"
+            )
+            # Store early-access releases separately
+            early_access_releases.append(release)
+        elif exceeds_min_version(release.title, min_version):
             actions_toolkit.debug(
                 f"Source release: {release.title} is early-access or greater than {min_version}, will copy to destination"
             )
@@ -57,7 +64,9 @@ def get_missing_releases(source_releases, dest_releases, min_version) -> list[Gi
         actions_toolkit.debug(f"Dest release: {release.title}")
         wrapped_dest_releases.add(ReleaseWrapper(release))
 
-    releases = [release.release for release in list(wrapped_sources - wrapped_dest_releases)]
+    standard_releases_to_add = [release.release for release in list(wrapped_sources - wrapped_dest_releases)]
+
+    releases = standard_releases_to_add + early_access_releases
     releases.sort(key=lambda release: release.published_at, reverse=True)
     actions_toolkit.debug(f"Releases to add: {releases}")
     return releases

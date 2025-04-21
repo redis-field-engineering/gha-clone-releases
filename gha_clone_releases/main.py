@@ -166,6 +166,19 @@ def main():
         target = this_repo.default_branch if inputs["target"] is None else inputs["target"]
         actions_toolkit.debug(f"Target branch is {target}")
         try:
+            # Special handling for early-access releases
+            if release.tag_name == "early-access":
+                actions_toolkit.info(f"Special handling for early-access release - checking if it already exists")
+                # Find and delete existing early-access release if it exists
+                existing_releases = [r for r in this_repo.get_releases() if r.tag_name == "early-access"]
+                if existing_releases:
+                    actions_toolkit.info("Found existing early-access release, deleting it before recreating")
+                    for existing_release in existing_releases:
+                        try:
+                            existing_release.delete_release()
+                            actions_toolkit.info("Successfully deleted existing early-access release")
+                        except Exception as del_exc:
+                            actions_toolkit.error(f"Error deleting existing early-access release: {del_exc}")
             new_release = this_repo.create_git_release(
                 tag=release.tag_name,
                 name=release.title,
